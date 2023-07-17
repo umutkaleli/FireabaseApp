@@ -1,8 +1,21 @@
 package com.sample.firebaseapp.chat.adapter
 
+import FirebaseHelper
+import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import android.widget.Toast
+import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
+import com.sample.firebaseapp.ui.profile.ProfileActivity
+import com.sample.firebaseapp.R
+import com.sample.firebaseapp.chat.ui.GroupChatActivity
 import com.sample.firebaseapp.chat.viewholder.MessageListReceiverViewHolder
 import com.sample.firebaseapp.chat.viewholder.MessageListSenderViewHolder
 import com.sample.firebaseapp.databinding.LayoutMessageReceiverBinding
@@ -14,6 +27,7 @@ class MessageListAdapter(
     private val currentUserId: String?
 ) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
     private var messageViewType: MessageDetailEnum = MessageDetailEnum.SENDER
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
 
@@ -23,6 +37,7 @@ class MessageListAdapter(
                     LayoutMessageReceiverBinding.inflate(
                         LayoutInflater.from(parent.context),
                         parent,
+
                         false
                     )
                 )
@@ -32,6 +47,7 @@ class MessageListAdapter(
                     LayoutMessageSenderBinding.inflate(
                         LayoutInflater.from(parent.context),
                         parent,
+
                         false
                     )
                 )
@@ -42,15 +58,59 @@ class MessageListAdapter(
     fun updateData(list: ArrayList<MessageModel>?) {
         items = list
         notifyDataSetChanged()
+
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (holder is MessageListReceiverViewHolder) {
-            holder.bind(items?.get(position))
-        }
 
-        if (holder is MessageListSenderViewHolder) {
-            holder.bind(items?.get(position))
+        val message = items?.get(position)
+
+        when (holder) {
+            is MessageListReceiverViewHolder -> {
+                holder.bind(message)
+                //Deleting a message
+                holder.binding.messageTextContainer.setOnLongClickListener {
+                    deleteMessage(message)
+                    true
+                }
+                //Navigating profile details
+                holder.binding.userNameTextView.setOnClickListener(){
+                    var isOwner=false
+                    FirebaseHelper.getCurrentUserModel { userModel -> it
+                        if (holder.binding.userNameTextView.text==userModel?.name){
+                            isOwner=true
+                        }
+                        val intent= Intent(holder.itemView.context,ProfileActivity::class.java).apply {
+                            putExtra("username",holder.binding.userNameTextView.text)
+                            putExtra("isOwner",isOwner)
+                        }
+                        holder.itemView.context.startActivity(intent)
+                    }
+                }
+            }
+            is MessageListSenderViewHolder -> {
+                holder.bind(message)
+                //Deleting a message
+                holder.binding.messageTextContainer.setOnLongClickListener {
+                    deleteMessage(message)
+                    true
+                }
+                //Navigating profile details
+                holder.binding.userNameTextView.setOnClickListener(){
+                    var isOwner=false
+                    FirebaseHelper.getCurrentUserModel { userModel -> it
+                        if (holder.binding.userNameTextView.text==userModel?.name){
+                            isOwner=true
+                        }
+                        val intent= Intent(holder.itemView.context,ProfileActivity::class.java).apply {
+                            putExtra("username",holder.binding.userNameTextView.text)
+                            putExtra("isOwner",isOwner)
+                        }
+                        holder.itemView.context.startActivity(intent)
+                    }
+
+                }
+            }
         }
     }
 
@@ -67,6 +127,22 @@ class MessageListAdapter(
             MessageDetailEnum.RECEIVER
         }
         return messageViewType.ordinal
+    }
+    private fun deleteMessage(message: MessageModel?) {
+        val database =Firebase.database
+        val myRef=database.getReference("GroupChats")
+
+        if (message != null) {
+            items?.remove(message)
+            myRef.child(message.uniqueKey).removeValue()
+                .addOnSuccessListener {
+                    notifyDataSetChanged()
+                }
+                .addOnFailureListener { exception ->
+                    // Handle the error if necessary
+                    Log.e("MessageListAdapter", "Failed to delete message: $exception")
+                }
+        }
     }
 
 }
