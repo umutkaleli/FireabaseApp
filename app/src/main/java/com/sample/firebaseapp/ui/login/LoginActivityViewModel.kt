@@ -9,7 +9,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.sample.firebaseapp.RequestListener
-import com.sample.firebaseapp.helpers.FirebaseHelper
+import FirebaseHelper
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 

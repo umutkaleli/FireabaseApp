@@ -1,5 +1,6 @@
 package com.sample.firebaseapp.chat.ui
 
+import GroupChatViewModel
 import android.os.Bundle
 import android.view.View
 import android.view.View.OnLayoutChangeListener
@@ -49,6 +50,7 @@ class GroupChatActivity : AppCompatActivity() {
         }
 
         getMessages()
+
 
         setContentView(binding.root)
     }

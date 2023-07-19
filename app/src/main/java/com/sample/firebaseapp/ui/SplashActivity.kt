@@ -6,7 +6,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.sample.firebaseapp.dashboard.DashBoardActivity
 import com.sample.firebaseapp.databinding.ActivitySplashBinding
-import com.sample.firebaseapp.helpers.FirebaseHelper
+import FirebaseHelper
 import com.sample.firebaseapp.ui.common.BaseActivity
 import com.sample.firebaseapp.ui.register.RegisterActivity
 

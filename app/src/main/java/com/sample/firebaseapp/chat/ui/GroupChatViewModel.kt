@@ -1,5 +1,3 @@
-package com.sample.firebaseapp.chat.ui
-
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.google.firebase.database.DataSnapshot
@@ -9,7 +7,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.sample.firebaseapp.RequestListener
-import com.sample.firebaseapp.helpers.FirebaseHelper
+import FirebaseHelper
 import com.sample.firebaseapp.model.MessageModel
 import com.sample.firebaseapp.model.UserModel
 import java.text.DateFormat
@@ -34,7 +32,7 @@ class GroupChatViewModel(application: Application) : AndroidViewModel(applicatio
     fun sendMessage(message: String?, requestListener: RequestListener) {
         val key = databaseReference.child("GroupChats").push().key
         val messageModel =
-            MessageModel(userModel?.name, userModel?.userId, message, getCurrentTime())
+            MessageModel(userModel?.name, userModel?.userId, message, getCurrentTime(),key.toString())
         key?.let { chatKey ->
             databaseReference.child("GroupChats").child(chatKey).setValue(messageModel)
                 .addOnCompleteListener { task ->
