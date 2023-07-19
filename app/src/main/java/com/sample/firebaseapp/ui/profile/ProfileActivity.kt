@@ -3,18 +3,12 @@ package com.sample.firebaseapp.ui.profile
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import com.bumptech.glide.Glide
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
 import com.sample.firebaseapp.databinding.ActivityProfileBinding
-import FirebaseHelper
-import com.sample.firebaseapp.model.UserModel
+import android.annotation.SuppressLint
+import androidx.activity.viewModels
 import kotlin.properties.Delegates
 
 class ProfileActivity : AppCompatActivity() {
@@ -22,50 +16,44 @@ class ProfileActivity : AppCompatActivity() {
 
     private var imageUri: Uri = Uri.EMPTY
 
-    private lateinit var storageReference: StorageReference
-
     private lateinit var username: String
 
     private var isOwner by Delegates.notNull<Boolean>()
 
-    private var userModel: UserModel? = null
+    private val viewModel: ProfileViewModel by viewModels()
 
     private val galleryLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             uri?.let {
                 imageUri = it
                 binding.profileImage.setImageURI(it)
-                uploadImageToStorage()
+                viewModel.uploadImageToStorage(username,imageUri)
             }
         }
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.backButton.setBackgroundColor(Color.TRANSPARENT)
+
         username = intent.getStringExtra("username").toString()
+
         isOwner = intent.getBooleanExtra("isOwner", false)
+
         binding.usernameOnProfileTextView.text = username
-        storageReference = FirebaseStorage.getInstance().getReference("images/$username")
 
-        FirebaseHelper.getCurrentUserModel(null,username) { user ->
-            userModel = user
 
-            val name = userModel?.name + " " + (userModel?.surName)
-            binding.nameOnprofileTextview.text = name
+        viewModel.getUserModel(username).observe(this) { userModel ->
 
-            storageReference.downloadUrl.addOnSuccessListener { uri ->
-                Glide
-                    .with(this)
-                    .load(uri)
-                    .centerCrop()
-                    .into(binding.profileImage)
-                Log.d("ProfilePageTest", uri.toString())
-            }.addOnFailureListener { exception ->
-                Log.e("ProfilePageTest", "Resim indirme hatası: $exception")
+            userModel?.let {
+                binding.nameOnprofileTextview.text = "${it.name} ${it.surName}"
+                loadProfileImage(username)
             }
+
         }
+
 
         binding.backButton.setOnClickListener {
             finish()
@@ -84,17 +72,11 @@ class ProfileActivity : AppCompatActivity() {
         galleryLauncher.launch("image/*")
     }
 
-    private fun uploadImageToStorage() {
-        if (imageUri != Uri.EMPTY) {
-            storageReference.putFile(imageUri)
-                .addOnSuccessListener {
-                    Log.d("ProfilePageTest", "Image upload successful")
-                    // Other operations if needed
-                }
-                .addOnFailureListener { exception ->
-                    Log.e("ProfilePageTest", "Image upload failed: $exception")
-                    // Error handling if needed
-                }
-        }
+    private fun loadProfileImage(username: String) {
+        viewModel.loadProfileImage(binding.profileImage,username)
     }
+
 }
+
+
+
